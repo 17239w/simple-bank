@@ -31,5 +31,5 @@ func (server *Server) Start(address string) error {
 
 // 很多地方都会用到
 func errorResponse(err error) gin.H {
-	return gin.H{"errpr": err.Error()}
+	return gin.H{"error": err.Error()}
 }

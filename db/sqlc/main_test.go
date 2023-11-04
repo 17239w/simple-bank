@@ -4,15 +4,11 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"simplebank/util"
 	_ "simplebank/util"
 	"testing"
 
 	_ "github.com/lib/pq"
-)
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:secret@172.27.193.28/simple_bank?sslmode=disable"
 )
 
 // 在所有的单元测试中会用到
@@ -20,8 +16,11 @@ var testQueries *Queries
 var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	var err error
-	testDB, err = sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("cannot load config", err)
+	}
+	testDB, err = sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
 	}
