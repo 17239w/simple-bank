@@ -13,9 +13,10 @@ import (
 
 // 避免代码重复性
 func createRandomAccount(t *testing.T) Account {
+	user := createRandomUser(t)
 	//参数结构体
 	arg := CreateAccountParams{
-		Owner:    util.RandomOwner(),
+		Owner:    user.Username,
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}

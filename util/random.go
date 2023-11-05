@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -34,14 +35,19 @@ func RandomOwner() string {
 	return RandomString(6)
 }
 
-// 生成随机的存款(0-1000)
+// 生成随机balance(0-1000)
 func RandomMoney() int64 {
 	return RandomInt(0, 1000)
 }
 
-// 生成随机的货币
+// 生成随机currency
 func RandomCurrency() string {
 	currencies := []string{EUR, USD, CAD}
 	n := len(currencies)
 	return currencies[rand.Intn(n)]
+}
+
+// 随机生成email
+func RandomEmail() string {
+	return fmt.Sprintf("%s@email.com", RandomString(6))
 }
