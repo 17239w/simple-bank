@@ -23,6 +23,8 @@ func NewServer(store db.Store) *Server {
 	}
 
 	//调用的函数，参数必须有*gin.Context
+	router.POST("/users", server.createUser)
+
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccount)
 	router.GET("/accounts", server.listAccount)
