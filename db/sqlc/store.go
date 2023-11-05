@@ -6,13 +6,20 @@ import (
 	"fmt"
 )
 
-type Store struct {
-	*Queries         //可以调用Quries的数据库操作(嵌套)
-	db       *sql.DB //Store层的数据库操作
+// SQLStore provides all functions to excute db queries and transactioncd
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+// SQLStore provides all functions to excute SQL queries and transaction
+type SQLStore struct {
+	*Queries         // excute SQL queries
+	db       *sql.DB //	transaction
+}
+
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db), //New(db)返回*Queries
 	}
@@ -20,7 +27,7 @@ func NewStore(db *sql.DB) *Store {
 
 // execTx 执行数据库事务
 // fn：接收*Queries参数并返回一个错误
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	//BeginTx starts a transaction.
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -61,7 +68,7 @@ var txKey = struct{}{} //
 // 1.生成一个transfer记录：result.Transfer
 // 2.添加2个账户
 // 3.更新acounts的balance(余额)
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 	// execTx 执行数据库事务
 	err := store.execTx(ctx, func(q *Queries) error {
