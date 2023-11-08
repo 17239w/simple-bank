@@ -4,19 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	token "simplebank/token"
 	"strings"
+
+	"simplebank/token"
 
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	authorizationHeaderKey  = "authorization"         //在请求中传递授权信息
-	authorizationTypeBearer = "bearer"                //指定授权方式
-	authorizationPayloadKey = "authorization_payload" //在授权信息中传递token的有效载荷数据
+	authorizationHeaderKey  = "authorization"
+	authorizationTypeBearer = "bearer"
+	authorizationPayloadKey = "authorization_payload"
 )
 
-// authMiddleware creates a gin middleware for authorization
+// AuthMiddleware creates a gin middleware for authorization
 func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
@@ -27,14 +28,13 @@ func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		//Fields：分割authorizationHeader为多个字符串
 		fields := strings.Fields(authorizationHeader)
 		if len(fields) < 2 {
 			err := errors.New("invalid authorization header format")
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 			return
 		}
-		//fields[0]=authorizationType
+
 		authorizationType := strings.ToLower(fields[0])
 		if authorizationType != authorizationTypeBearer {
 			err := fmt.Errorf("unsupported authorization type %s", authorizationType)
@@ -42,7 +42,6 @@ func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		//fields[1]=token
 		accessToken := fields[1]
 		payload, err := tokenMaker.VerifyToken(accessToken)
 		if err != nil {

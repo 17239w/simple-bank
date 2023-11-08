@@ -1,31 +1,29 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
-	"simplebank/util"
-	_ "simplebank/util"
 	"testing"
 
-	_ "github.com/lib/pq"
+	"simplebank/util"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// 在所有的单元测试中会用到
-var testQueries *Queries
-var testDB *sql.DB
+var testStore Store
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
-		log.Fatal("cannot load config", err)
+		log.Fatal("cannot load config:", err)
 	}
-	testDB, err = sql.Open(config.DBDriver, config.DBSource)
+
+	connPool, err := pgxpool.New(context.Background(), config.DBSource)
 	if err != nil {
-		log.Fatal("cannot connect to db", err)
+		log.Fatal("cannot connect to db:", err)
 	}
-	testQueries = New(testDB)
-	//Run runs the tests. It returns an exit code to pass to os.Exit.
-	m.Run()
+
+	testStore = NewStore(connPool)
 	os.Exit(m.Run())
 }

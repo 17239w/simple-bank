@@ -2,10 +2,11 @@ package api
 
 import (
 	"os"
-	db "simplebank/db/sqlc"
-	"simplebank/util"
 	"testing"
 	"time"
+
+	db "simplebank/db/sqlc"
+	"simplebank/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -25,5 +26,6 @@ func newTestServer(t *testing.T, store db.Store) *Server {
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
+
 	os.Exit(m.Run())
 }

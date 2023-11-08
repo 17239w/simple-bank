@@ -7,7 +7,6 @@ import (
 )
 
 // HashPassword returns the bcrypt hash of the password
-// 返回bcrypt算法对密码进行哈希加密后的结果/err
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

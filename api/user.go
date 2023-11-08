@@ -3,9 +3,10 @@ package api
 import (
 	"errors"
 	"net/http"
+	"time"
+
 	db "simplebank/db/sqlc"
 	"simplebank/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,7 +19,6 @@ type createUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 }
 
-// 不返回PasswordChangedAt time.Time `json:"password_changed_at"` 故单独声明一个response struct
 type userResponse struct {
 	Username          string    `json:"username"`
 	FullName          string    `json:"full_name"`
@@ -28,7 +28,6 @@ type userResponse struct {
 }
 
 func newUserResponse(user db.User) userResponse {
-	//db.User中有HashedPassword,在createUser时，不能返回
 	return userResponse{
 		Username:          user.Username,
 		FullName:          user.FullName,
@@ -44,17 +43,20 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
 	arg := db.CreateUserParams{
 		Username:       req.Username,
 		HashedPassword: hashedPassword,
 		FullName:       req.FullName,
 		Email:          req.Email,
 	}
+
 	user, err := server.store.CreateUser(ctx, arg)
 	if err != nil {
 		if db.ErrorCode(err) == db.UniqueViolation {
@@ -64,8 +66,9 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	rep := newUserResponse(user)
-	ctx.JSON(http.StatusOK, rep)
+
+	rsp := newUserResponse(user)
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 type loginUserRequest struct {
@@ -73,9 +76,6 @@ type loginUserRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-// RefreshToken是一个用于获取新的AccessToken的凭证，用于在AccessToken过期之后重新认证用户身份。
-// 当AccessToken过期时，可以使用RefreshToken向服务器请求一个新的AccessToken，而无需用户重新输入用户名和密码。
-// RefreshToken通常具有较长的有效期，用于保持用户登录状态的持久性。
 type loginUserResponse struct {
 	SessionID             uuid.UUID    `json:"session_id"`
 	AccessToken           string       `json:"access_token"`
@@ -110,7 +110,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(
 		user.Username,
-		//user.Role,
+		user.Role,
 		server.config.AccessTokenDuration,
 	)
 	if err != nil {
@@ -120,7 +120,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(
 		user.Username,
-		//user.Role,
+		user.Role,
 		server.config.RefreshTokenDuration,
 	)
 	if err != nil {

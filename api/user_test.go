@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"testing"
+
 	mockdb "simplebank/db/mock"
 	db "simplebank/db/sqlc"
 	"simplebank/util"
-	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"

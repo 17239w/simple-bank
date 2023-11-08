@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
+
 	db "simplebank/db/sqlc"
-	token "simplebank/token"
+	"simplebank/token"
 	"simplebank/util"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// Server serves HTTP requests for our banking service.
 type Server struct {
 	config     util.Config
 	store      db.Store
@@ -18,11 +20,11 @@ type Server struct {
 	router     *gin.Engine
 }
 
-// create HTTP server and setup routing
+// NewServer creates a new HTTP server and set up routing.
 func NewServer(config util.Config, store db.Store) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create token maker:%w", err)
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
 	server := &Server{
@@ -35,7 +37,6 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	//调用的函数
 	server.setupRouter()
 	return server, nil
 }
@@ -50,18 +51,18 @@ func (server *Server) setupRouter() {
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 	authRoutes.POST("/accounts", server.createAccount)
 	authRoutes.GET("/accounts/:id", server.getAccount)
-	authRoutes.GET("/accounts", server.listAccount)
+	authRoutes.GET("/accounts", server.listAccounts)
 
 	authRoutes.POST("/transfers", server.createTransfer)
+
 	server.router = router
 }
 
-// 开启监听
+// Start runs the HTTP server on a specific address.
 func (server *Server) Start(address string) error {
 	return server.router.Run(address)
 }
 
-// 很多地方都会用到
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}
 }
