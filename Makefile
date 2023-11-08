@@ -1,4 +1,4 @@
-DB_URL=postgresql://root:secret@172.27.235.95/simple_bank?sslmode=disable
+DB_URL=postgresql://root:secret@172.27.207.22/simple_bank?sslmode=disable
 postgres:
 	docker run --name postgres12 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
 createdb:
@@ -27,10 +27,13 @@ mock:
 	mockgen -package mockdb -destination db/mock/store.go simplebank/db/sqlc Store
 proto:
 	rm -f pb/*.go
+	rm -f doc/swagger/*.swagger.json
 	protoc  --proto_path=proto  --go_out=pb  --go_opt=paths=source_relative \
     --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
 	--grpc-gateway_out=pb  --grpc-gateway_opt=paths=source_relative \
-    proto/*.proto
+    --openapiv2_out=doc/swagger --openapiv2_opt=allow_merge=true,merge_file_name=simple_bank \
+	proto/*.proto
+	statik -src=./doc/swagger -dest=./doc
 evans:
 	evans --host localhost --port 9090 -r repl
 .PHONY:postgres createdb dropdb migrateup migratedown migrateup1 migratedown1  db_docs db_schema sqlc test server mock proto evans
